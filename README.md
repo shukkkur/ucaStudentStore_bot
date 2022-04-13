@@ -3,7 +3,7 @@
 </p>
 
 
-<h2 align='center'>Naryn Students' Store</h2>
+<h2 align='center'>ucaStudentStore</h2>
 <p align='left'>To buy from and sell to other students</p> 
 
 <h2>Features</h2>
