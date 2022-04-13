@@ -11,7 +11,7 @@
 - [X] Register the first time, after that you will always be recognised
 - [X] You can login either as a seller or a customer 
 - [X] Customer has options of going over the ads in categories, notify the owner about a potential purchase or see seller's contacts.
-- [X] Seller can post a product for selling or edit or delete previous posts. 
+- [X] Seller can post a product for selling, edit or delete previous posts. 
 - [X] After a user-seller has posted a new product, all registered users will get a notification message 
 
 <h2>Further Developments</h2>
