@@ -1,5 +1,5 @@
 <p align='center'>
-   <img src="https://github.com/shukkkur/ucaStudentStore_bot/blob/a69d6548791eece297c6f621f536b69aba635e13/cabbages-removebg-preview.png" width=200>
+   <img src="https://github.com/shukkkur/ucaStudentStore_bot/blob/07d39dbac20e5f433e651c9e5e863ad57b94c40b/README_files/cabbages-removebg-preview.png" width=200>
 </p>
 
 
@@ -26,7 +26,7 @@
 
 Customer / Buy            |  Owner / Sell
 :-------------------------:|:-------------------------:
-![customer](https://github.com/shukkkur/ucaStudentStore_bot/blob/e599084d82563eb4a1ecaf7ec5aa38a5359032d8/buy.gif)  |  ![owner](https://github.com/shukkkur/ucaStudentStore_bot/blob/c075b83a1c89a31a153b29611ddda00bbc89a78b/sell.gif)
+![customer](https://github.com/shukkkur/ucaStudentStore_bot/blob/07d39dbac20e5f433e651c9e5e863ad57b94c40b/README_files/buy.gif)  |  ![owner](https://github.com/shukkkur/ucaStudentStore_bot/blob/07d39dbac20e5f433e651c9e5e863ad57b94c40b/README_files/sell.gif)
 
 
 
