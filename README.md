@@ -4,7 +4,7 @@
 
 
 <h2 align='center'>ucaStudentStore</h2>
-<p align='left'>To buy from and sell to other students 🤖</p> 
+<p align='left'>To buy from and sell to other students</p> 
 
 <h2>Features</h2>
 
@@ -21,6 +21,13 @@
 - [ ] Edite your personal information (user name, business name, room and phone number)
 - [ ] Delete your account
 - [ ] When adding a porduct, specify quantity. If quantity > 0, show product, otherwise don't. 
+
+<h2>Sample Use</h2>
+
+Customer / Buy            |  Owner / Sell
+:-------------------------:|:-------------------------:
+![customer](https://github.com/shukkkur/ucaStudentStore_bot/blob/e599084d82563eb4a1ecaf7ec5aa38a5359032d8/buy.gif)  |  ![owner](https://github.com/shukkkur/ucaStudentStore_bot/blob/c075b83a1c89a31a153b29611ddda00bbc89a78b/sell.gif)
+
 
 
 <h2>Credits</h2>
