@@ -1,0 +1,6 @@
+python-telegram-bot==13.11
+requests==2.27.1
+Flask==2.1.1
+faunadb==4.2.0
+cloudinary==1.29.0
+pytz==2022.1
