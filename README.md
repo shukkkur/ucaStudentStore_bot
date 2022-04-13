@@ -1,5 +1,5 @@
 <h2 align='center'>ucaStudentStore 🤖</h2>
-<p align='left'>For Students to Buy from and Sell to other students.</p> 
+<p align='left'>To buy from and sell to other students.</p> 
 
 <h2>Features</h2>
 
