@@ -21,5 +21,5 @@
 <h2>Credits</h2>
 <ol>
 <li>Post on writing a Telegram Bot in Python - <a href="https://dev.to/curiouspaul1/building-an-e-commerce-telegram-bot-using-python-and-fauna-1hj5">DEV.to</a></li>
-<li>Author - <a href="<li>">CuriousPaul1</a></li>
+<li>99.9% of the code by <a href="<li>">CuriousPaul1</a></li>
 </ol>
