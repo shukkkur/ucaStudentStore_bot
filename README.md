@@ -1,5 +1,10 @@
-<h2 align='center'>ucaStudentStore 🤖</h2>
-<p align='left'>To buy from and sell to other students.</p> 
+<p align='center'>
+   <img src="https://github.com/shukkkur/ucaStudentStore_bot/blob/a69d6548791eece297c6f621f536b69aba635e13/cabbages-removebg-preview.png" width=200>
+</p>
+
+
+<h2 align='center'>ucaStudentStore</h2>
+<p align='left'>To buy from and sell to other students 🤖</p> 
 
 <h2>Features</h2>
 
