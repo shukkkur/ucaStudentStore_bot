@@ -13,7 +13,7 @@
 - [X] Customer has options of going over the ads in categories, notify the owner about a potential purchase or see seller's contacts.
 - [X] Seller can post a product for selling, edit or delete previous posts. 
 - [X] After a user-seller has posted a new product, all registered users will get a notification message 
-
+- [X] If any User adds a new product, all other user get a notification message about it
 <h2>Further Developments</h2>
 
 - [ ] Divide posts into categories (food, clothes ...) 
