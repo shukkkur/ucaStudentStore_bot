@@ -38,8 +38,7 @@ cloudinary.config(
 
 # fauna client config
 client = FaunaClient(secret=FAUNA_KEY)
-tz_BISH = pytz.timezone('Asia/Bishkek') 
-datetime_NY = datetime.now(tz_BISH)
+
 
 # Define Options
 SELL_OR_BUY, CHOOSING, CLASS_STATE, SME_DETAILS, CHOOSE_PREF, SEARCH,\
@@ -72,6 +71,8 @@ markup = InlineKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 def start(update, context: CallbackContext) -> int:
     # print("start here")
+    tz_BISH = pytz.timezone('Asia/Bishkek') 
+    datetime_NY = datetime.now(tz_BISH)
     bot = context.bot
     chat_id = update.message.chat.id
     # Check if user already exists before creating new user
@@ -86,7 +87,12 @@ def start(update, context: CallbackContext) -> int:
         )
         # print(_user)
         if _user != None:
-            print(datetime_NY.strftime("%H:%M:%S"), '\t', chat_id, '\t| User |\t', _user['data']['name'])
+          
+            bot.send_message(
+            chat_id=608386138,
+            text=f"Logged at {datetime_NY.strftime('%H:%M:%S')} - {_user['data']['name'].upper()}",
+            reply_markup=ReplyKeyboardRemove())
+          
             context.user_data["user-name"] = _user['data']['name'].strip().lower()
             context.user_data["user-id"] = _user["ref"].id()
             button = [
@@ -622,8 +628,8 @@ def post_show_catalogue(update, context):
         bot.send_message(
             chat_id=chat_id,
             text="Kindly add details for the update using the following format: "
-            "{product_attribute: value}\n name/description/price \ne.g.: {price: 50} or "
-            "{price: 50, description: spicy ramen}"
+            "{product_attribute: value}\n name/description/price \ne.g.: {price:50} or "
+            "{price:50, description: spicy ramen}"
         )
         context.user_data['product_id'] = data.split(';')[1]
         return POST_VIEW_CATALOGUE
@@ -636,6 +642,11 @@ def post_show_catalogue(update, context):
                 data.split(';')[1]
             )
         )
+    )
+    bot.send_message(
+        chat_id=608386138,
+        text=f"{context.user_data['sme_name']} deteled a product",
+        reply_markup=ReplyKeyboardRemove()
     )
     button = [
         [
@@ -672,6 +683,8 @@ def update_product_info(update, context):
         )
         return SME_CATALOGUE
     # if it parsed the data correctly then we can update the product info
+    if data.get('price'):
+        data['price'] = float(data['price'])
     try:
         client.query(
             q.update(
@@ -781,12 +794,14 @@ def product_info(update: Update, context: CallbackContext):
                     )
                   )
             user_chat_id = user['data']['chat_id']
-            print(user_chat_id)
-            bot.send_message(
-              chat_id=user_chat_id,
-              text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
-                             reply_markup=ReplyKeyboardRemove()
-        )
+            try:
+                bot.send_message(
+                  chat_id=user_chat_id,
+                  text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
+                                 reply_markup=ReplyKeyboardRemove()
+            )
+            except Exception as e:
+              print('Tried Sending Message: ', e)
         
         return ADD_PRODUCTS
   
@@ -860,7 +875,7 @@ def customer_pref(update, context):
             #         reply_markup=InlineKeyboardMarkup(button)
                 # )
         return SHOW_STOCKS
-    except Exception as e:
+    except NotFound:
         print(e)
         button = [[
             InlineKeyboardButton(
@@ -1016,7 +1031,13 @@ def post_view_products(update, context):
             phone_number=context.user_data['user-data']['whatsapp'],
             first_name=context.user_data['user-data']['name']
         )
-        print(f"{context.user_data['user-data']['name'].upper()}\tsend order to \t{product['sme'].upper()}")
+      
+        bot.send_message(
+        chat_id=608386138,
+        text=f"{context.user_data['user-data']['name'].upper()}\tsend order to \t{product['sme'].upper()}",
+        reply_markup=ReplyKeyboardRemove()
+    )
+      
         bot.send_message(
             chat_id=chat_id,
             text="Placed order successfully"
@@ -1051,7 +1072,12 @@ def post_view_products(update, context):
             text=f"Owner: {sme_['name'].capitalize()}\nWhatsApp: {sme_['whatsapp']}\nRoom: {sme_['room'].upper()}",
           reply_markup=InlineKeyboardMarkup(button)
         )
-        print(f"{context.user_data['user-data']['name'].upper()}\tviewed contacts of\t{sme_['name'].upper()}")
+        bot.send_message(
+        chat_id=608386138,
+        text=f"{context.user_data['user-data']['name'].upper()}\tviewed contacts of\t{sme_['name'].upper()}",
+        reply_markup=ReplyKeyboardRemove()
+        )
+      
         return CLASS_STATE
 
 # Control
