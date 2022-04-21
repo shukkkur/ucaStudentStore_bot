@@ -1,5 +1,5 @@
 <p align='center'>
-   <img src="https://github.com/shukkkur/ucaStudentStore_bot/blob/a69d6548791eece297c6f621f536b69aba635e13/cabbages-removebg-preview.png" width=200>
+   <img src="https://github.com/shukkkur/ucaStudentStore_bot/blob/07d39dbac20e5f433e651c9e5e863ad57b94c40b/README_files/cabbages-removebg-preview.png" width=200>
 </p>
 
 
@@ -11,9 +11,9 @@
 - [X] Register the first time, after that you will always be recognised
 - [X] You can login either as a seller or a customer 
 - [X] Customer has options of going over the ads in categories, notify the owner about a potential purchase or see seller's contacts.
-- [X] Seller can post a product for selling or edit or delete previous posts. 
+- [X] Seller can post a product for selling, edit or delete previous posts. 
 - [X] After a user-seller has posted a new product, all registered users will get a notification message 
-
+- [X] If any User adds a new product, all other user get a notification message about it
 <h2>Further Developments</h2>
 
 - [ ] Divide posts into categories (food, clothes ...) 
@@ -26,12 +26,12 @@
 
 Customer / Buy            |  Owner / Sell
 :-------------------------:|:-------------------------:
-![customer](https://github.com/shukkkur/ucaStudentStore_bot/blob/e599084d82563eb4a1ecaf7ec5aa38a5359032d8/buy.gif)  |  ![owner](https://github.com/shukkkur/ucaStudentStore_bot/blob/c075b83a1c89a31a153b29611ddda00bbc89a78b/sell.gif)
+![customer](https://github.com/shukkkur/ucaStudentStore_bot/blob/07d39dbac20e5f433e651c9e5e863ad57b94c40b/README_files/buy.gif)  |  ![owner](https://github.com/shukkkur/ucaStudentStore_bot/blob/07d39dbac20e5f433e651c9e5e863ad57b94c40b/README_files/sell.gif)
 
 
 
 <h2>Credits</h2>
 <ol>
-<li>Post on writing a Telegram Bot in Python - <a href="https://dev.to/curiouspaul1/building-an-e-commerce-telegram-bot-using-python-and-fauna-1hj5">DEV.to</a></li>
+<li>Post on creating a Telegram Bot in Python - <a href="https://dev.to/curiouspaul1/building-an-e-commerce-telegram-bot-using-python-and-fauna-1hj5">DEV.to</a></li>
 <li>99.9% of the code by <a href="https://github.com/Curiouspaul1/">CuriousPaul1</a></li>
 </ol>
