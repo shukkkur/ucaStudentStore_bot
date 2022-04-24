@@ -178,17 +178,19 @@ def after_start(update, context: CallbackContext) -> int:
         button = [
             [
                 InlineKeyboardButton(
-                    text="View vendors to buy from",
-                    callback_data="customer"
-                )
-            ],
-            [
+                    text="View Products",
+                    callback_data="view"
+                ),
                 InlineKeyboardButton(
-                    text="Search for a vendor by name",
-                    callback_data="customer;search"
-                )
+                    text="View Sellers",
+                    callback_data="customer"
+                ),
             ],
           [
+                InlineKeyboardButton(
+                      text="Search for a Vendor",
+                      callback_data="customer;search"
+                ),
                 InlineKeyboardButton(
                     text="Exit",
                     callback_data="exit"
@@ -298,6 +300,39 @@ def classer(update, context):
     # print('Inside Classer - ', update.callback_query.data.lower())
     if update.callback_query.data.lower() == "exit":
       return SELL_OR_BUY
+
+  
+    elif update.callback_query.data.lower() == "view":
+        categories = [  
+        [
+            InlineKeyboardButton(
+                text="Food",
+                callback_data="Food_view"
+            ),
+            InlineKeyboardButton(
+                text="Other",
+                callback_data="Other_view"
+            )
+        ],
+        [InlineKeyboardButton(
+                    text="Back",
+                    callback_data="customer_back"),
+          
+         InlineKeyboardButton(
+                    text="Exit",
+                    callback_data="exit"
+                )
+        ]]
+      
+        bot.send_message(
+        chat_id=chat_id,
+        text="Select a category for the products.",
+        reply_markup=InlineKeyboardMarkup(categories)
+        )
+        # print('before CHOOSE_PREF')
+        return CHOOSE_PREF
+
+      
     elif update.callback_query.data.lower() == "sme":
         # update user as sme_owner
         client.query(
@@ -533,8 +568,8 @@ def add_product(update, context):
         return CHOOSE_PREF
     bot.send_message(
         chat_id=chat_id,
-        text="Please add title, description, and price (NUMBER only) of a product as caption to an image.\n"
-        "All separated by commas (,)\ne.g.: Coca-cola, 2 left (1.5 liter), 80"
+        text="Please provide title, description, category (food/other) and price (NUMBER only) of a product as caption to an image.\n"
+        "All separated by commas (,)\ne.g.: Coca-cola, 2 left (1.5 liter), food, 80"
         
     )
     return ADD_PRODUCTS
@@ -616,8 +651,11 @@ def post_show_catalogue(update, context):
     chat_id = update.callback_query.message.chat.id
     # check for selected option
     data = update.callback_query.data
-  
-    if "back" in data:
+
+    if "view_again" in data:
+        return CHOOSE_PREF
+
+    elif "back" in data:
         return SELL_OR_BUY
       
     elif "exit" in data:
@@ -783,14 +821,17 @@ def product_info(update: Update, context: CallbackContext):
     try:
         temp = update.message.caption.split(',')
       
-        if len(temp) < 3 or len(temp) > 3:
+        if len(temp) < 4 or len(temp) > 4:
             bot.send_message(chat_id=chat_id, text="Invalid entry!")
-            bot.send_message(chat_id=chat_id, text="As a caption to the image, please provide Title, Description and Price (only number) seperated by comma (,)\ne.g.: Coca-cola, 1.5 liters (2 Left), 80")
+            bot.send_message(chat_id=chat_id, text="As a caption to the image, please provide Title, Description, Category (food/other) and Price (only number) seperated by comma (,)\ne.g.: Coca-cola, 1.5 liters (2 Left), food, 80")
             bot.send_message(chat_id=chat_id, text="Type /start, to restart bot")
             return ConversationHandler.END
 
     except AttributeError:
+        bot.send_message(chat_id=chat_id, text="Invalid entry!")
+        bot.send_message(chat_id=chat_id, text="Type /start, to restart bot")
         temp = update.message.text.split(',')
+        return ConversationHandler.END
 
     photo = bot.getFile(update.message.photo[-1].file_id)
     file_ = open('product_image.png', 'wb')
@@ -810,11 +851,11 @@ def product_info(update: Update, context: CallbackContext):
                 {"data": {
                         "name":data[0].strip().lower(),
                         "description":data[1].strip().lower(),
-                        "price":float(data[2]),
+                        "price":float(data[3]),
                         "image":send_photo["secure_url"],
                         "sme":context.user_data["sme_name"].strip().lower(),
                         "sme_chat_id": update.message.chat.id,
-                        "category":context.user_data["sme_cat"].lower().strip()
+                        "category":data[2].strip().lower(),
                     }
                 }
             )
@@ -887,23 +928,23 @@ def product_info(update: Update, context: CallbackContext):
               q.collection("User")),
               size=100))
 
-        for i in all_users['data']:
-            iid = i.id()
-            user = client.query(
-              q.get(
-                q.ref(
-                  q.collection("User"), iid)
-                    )
-                  )
-            user_chat_id = user['data']['chat_id']
-            try:
-                bot.send_message(
-                  chat_id=user_chat_id,
-                  text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
-                                 reply_markup=ReplyKeyboardRemove()
-            )
-            except Exception as e:
-              print('Tried Sending Message: ', e)
+        # for i in all_users['data']:
+        #     iid = i.id()
+        #     user = client.query(
+        #       q.get(
+        #         q.ref(
+        #           q.collection("User"), iid)
+        #             )
+        #           )
+        #     user_chat_id = user['data']['chat_id']
+        #     try:
+        #         bot.send_message(
+        #           chat_id=user_chat_id,
+        #           text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
+        #                          reply_markup=ReplyKeyboardRemove()
+        #     )
+        #     except Exception as e:
+        #       print('Tried Sending Message: ', e)
         
         return ADD_PRODUCTS
   
@@ -923,7 +964,68 @@ def customer_pref(update, context):
         return ConversationHandler.END
       
     elif "back" in data:
-        return SELL_OR_BUY      
+        return SELL_OR_BUY    
+
+    elif "view" in data:
+        try:
+            products = client.query(
+                q.map_(
+                    lambda var: q.get(var),
+                    q.paginate(
+                        q.match(
+                            q.index("product_by_category"),
+                            str(data.split('_')[0]).lower().strip()
+                        )
+                    )
+                )
+            )
+          
+            if len(products['data']) == 0:
+                button = [
+                    [
+                        InlineKeyboardButton(
+                            text="Back to Categories",
+                            callback_data="customer"
+                        )
+                    ]
+                ]
+                bot.send_message(
+                    chat_id=chat_id,
+                    text="Nothing here yet, users haven't added any products!, check back later",
+                    reply_markup=InlineKeyboardMarkup(button)
+                )
+                return CLASS_STATE
+
+            for product in products["data"]:
+                context.user_data["sme_id"] = product['data']['sme'].strip().lower()
+                button = [
+                    [
+                        InlineKeyboardButton(
+                            text="Send Order",
+                            callback_data="order;" + product["ref"].id()
+                        ),
+                      InlineKeyboardButton(
+                            text="Vendor's Contacts",
+                            callback_data="contact;" + product["data"]["sme"].strip().lower()
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="Exit",
+                            callback_data="exit"
+                        )
+                    ]
+                ]
+                bot.send_photo(
+                    chat_id=chat_id,
+                    photo=product["data"]["image"],
+                    caption=f"{product['data']['name']} \nDescription: {product['data']['description']}\nPrice (som): {product['data']['price']}",
+                    reply_markup=InlineKeyboardMarkup(button)
+                )
+            return POST_VIEW_PRODUCTS
+        except:
+          pass
+          
     try:
         smes_ = client.query(
             q.map_(
@@ -937,7 +1039,7 @@ def customer_pref(update, context):
             )
         )
         # print('SME_ DATA - ', smes_['data'])
-        for sme in smes_["data"]:   
+        for sme in smes_["data"]:
             # print('we are inside')
             button = [
                 [
