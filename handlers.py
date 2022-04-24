@@ -881,29 +881,29 @@ def product_info(update: Update, context: CallbackContext):
             reply_markup=InlineKeyboardMarkup(button)
         )
       
-        # all_users = client.query(
-        #   q.paginate(
-        #     q.documents(
-        #       q.collection("User")),
-        #       size=100))
+        all_users = client.query(
+          q.paginate(
+            q.documents(
+              q.collection("User")),
+              size=100))
 
-        # for i in all_users['data']:
-        #     iid = i.id()
-        #     user = client.query(
-        #       q.get(
-        #         q.ref(
-        #           q.collection("User"), iid)
-        #             )
-        #           )
-        #     user_chat_id = user['data']['chat_id']
-        #     try:
-        #         bot.send_message(
-        #           chat_id=user_chat_id,
-        #           text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
-        #                          reply_markup=ReplyKeyboardRemove()
-        #     )
-        #     except Exception as e:
-        #       print('Tried Sending Message: ', e)
+        for i in all_users['data']:
+            iid = i.id()
+            user = client.query(
+              q.get(
+                q.ref(
+                  q.collection("User"), iid)
+                    )
+                  )
+            user_chat_id = user['data']['chat_id']
+            try:
+                bot.send_message(
+                  chat_id=user_chat_id,
+                  text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
+                                 reply_markup=ReplyKeyboardRemove()
+            )
+            except Exception as e:
+              print('Tried Sending Message: ', e)
         
         return ADD_PRODUCTS
   
