@@ -1,20 +1,22 @@
-import keep_alive
+from helpers import update_sme_latest
 
-from re import search
-import handlers
+from telegram import (
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove, Update,
+    InlineKeyboardButton, InlineKeyboardMarkup
+)
+
+from datetime import datetime
+import pytz
+
+
 from telegram.ext import (
     CommandHandler, CallbackContext,
     ConversationHandler, MessageHandler,
     Filters, Updater, CallbackQueryHandler
 )
-from config import TOKEN
-
-updater = Updater(token=TOKEN, use_context=True)
-print(updater)
-dispatcher = updater.dispatcher
 
 
-<<<<<<< HEAD
 from config import (
     api_key, #sender_email,
     api_secret,
@@ -178,71 +180,298 @@ def after_start(update, context: CallbackContext) -> int:
                 InlineKeyboardButton(
                     text="View vendors to buy from",
                     callback_data="customer"
-=======
-def main():
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', handlers.start)],
-        states={
-            handlers.SELL_OR_BUY: [
-                # MessageHandler(Filters.all, handlers.after_start),
-                CallbackQueryHandler(handlers.after_start)
-          ],
-            handlers.CHOOSING: [
-                MessageHandler(
-                    Filters.all, handlers.choose
->>>>>>> 7b2b7e4bce60e8f770a8bbe54b877b83fecb7743
                 )
             ],
-            handlers.CLASS_STATE: [
-                CallbackQueryHandler(handlers.classer)
-            ],
-            handlers.SME_DETAILS: [
-                MessageHandler(
-                    Filters.all, handlers.business_details
+            [
+                InlineKeyboardButton(
+                    text="Search for a vendor by name",
+                    callback_data="customer;search"
                 )
             ],
-            handlers.SME_CAT: [
-                CallbackQueryHandler(handlers.business_details_update)
-            ],
-            handlers.ADD_PRODUCTS: [
-                CallbackQueryHandler(handlers.add_product),
-                MessageHandler(Filters.all, handlers.product_info)
-            ],
-            handlers.CHOOSE_PREF: [
-                CallbackQueryHandler(handlers.customer_pref)
-            ],
-            handlers.SHOW_STOCKS: [
-                CallbackQueryHandler(handlers.show_products)
-            ],
-            handlers.POST_VIEW_PRODUCTS: [
-                CallbackQueryHandler(handlers.post_view_products)
-            ],
-            handlers.SEARCH: [
-                MessageHandler(
-                    Filters.all, handlers.search
+          [
+                InlineKeyboardButton(
+                    text="Exit",
+                    callback_data="exit"
                 )
-            ],
-            handlers.SME_CATALOGUE: [
-                CallbackQueryHandler(handlers.show_catalogue)
-            ],
-            handlers.POST_VIEW_CATALOGUE: [
-                CallbackQueryHandler(handlers.post_show_catalogue),
-                MessageHandler(Filters.all, handlers.update_product_info)
             ]
-        },
-        fallbacks=[CommandHandler('cancel', handlers.cancel), 
-                  CommandHandler('help', handlers.help)],
-        allow_reentry=True
+        ]
+        bot.send_message(
+            chat_id=chat_id,
+            text=f"Welcome back {user['data']['name'].split(' ')[0].capitalize()}!",
+            reply_markup=InlineKeyboardMarkup(button)
+        )
+        return CLASS_STATE
+    else:
+        client.query(
+            q.update(
+                q.ref(
+                    q.collection('User'), user['ref'].id()
+                ),
+                {'data': {'is_smeowner': True}}
+            )
+        )
+        try:
+            sme = client.query(
+                        q.get(
+                            q.match(
+                                q.index("business_by_chat_id"),
+                                chat_id
+                            )
+                        )
+                    )
+            if sme:
+                context.user_data["sme_name"] = sme['data']['name'].lower().strip()
+                context.user_data['sme_cat'] = sme['data']['category'].lower().strip()
+                context.user_data['sme_latest'] = sme['data']['latest']
+                context.user_data['sme_id'] = sme['ref'].id()
+                # context.user_data['sme_link'] = sme['data']['business_link']
+                button = [
+                    [
+                        InlineKeyboardButton(
+                            text="Add A New Product",
+                            callback_data=chat_id
+                        ),
+                        InlineKeyboardButton(
+                            text="View your catalogue",
+                            callback_data="catalogue"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="Exit",
+                            callback_data="exit"
+                        )
+                    ]
+                ]
+                _markup = InlineKeyboardMarkup(
+                    button,
+                    one_time_keyboard=True
+                )
+                bot.send_message(
+                    chat_id=chat_id,
+                    text=f"Welcome back {user['data']['name'].split(' ')[0].capitalize()}!",
+                    reply_markup=_markup
+                )
+                return ADD_PRODUCTS
+        
+        except NotFound:
+            return CLASS_STATE
+          
+          
+def choose(update, context):
+    bot = context.bot
+    chat_id = update.message.chat.id
+    # create new data entry
+    data = update.message.text.split(',')
+    if len(data) < 2 or len(data) > 2:
+        bot.send_message(chat_id=chat_id, text="Invalid entry!")
+        bot.send_message(chat_id=chat_id, text="Type /start, to restart bot"
+)
+        return ConversationHandler.END
+    #TODO: Check if user already exists before creating new user
+    new_user = client.query(q.create(q.collection('User'), {
+            "data":{
+                "name":data[0].strip().lower(),
+                "whatsapp":data[1].strip(),
+                "is_smeowner": False,
+                "preference": "",
+                "chat_id": chat_id
+            }
+        })
     )
-    dispatcher.add_handler(conv_handler)
-    # extras
-    search = CommandHandler('search', handlers.search_)
-    dispatcher.add_handler(search)
-    updater.start_polling()
-    updater.idle()
+    context.user_data["user-id"] = new_user["ref"].id()
+    context.user_data["user-name"] = data[0].strip().lower()
+    context.user_data['user-data'] = new_user['data']
+  
+    bot.send_message(
+        chat_id=chat_id,
+        text="🎉🎉🎉\nThank you!\n"
+        "Which of the following do you identify as?",
+        reply_markup=markup
+    )
+    return CLASS_STATE
+
+def classer(update, context):
+    bot = context.bot
+    chat_id = update.callback_query.message.chat.id
+    name = context.user_data["user-name"].lower().strip()
+    # print('Inside Classer - ', update.callback_query.data.lower())
+    if update.callback_query.data.lower() == "exit":
+      return SELL_OR_BUY
+    elif update.callback_query.data.lower() == "sme":
+        # update user as sme_owner
+        client.query(
+            q.update(
+                q.ref(q.collection("User"), context.user_data["user-id"]),
+                {"data": {"is_smeowner":True}}
+            )
+        )
+        bot.send_message(
+            chat_id=chat_id,
+            text=f"Great!\n{name.split(' ')[0]},"
+            " please provide your BrandName/Name, Room Number and WhatsApp number separated by comma (,)\n"
+            "e.g: Jonny, A12, +234567897809",
+            reply_markup=ReplyKeyboardRemove()
+        )
+
+        return SME_DETAILS
+    categories = [  
+        [
+            InlineKeyboardButton(
+                text="Food",
+                callback_data="Food"
+            ),
+            InlineKeyboardButton(
+                text="Other",
+                callback_data="Other"
+            )
+        ],
+    [
+    InlineKeyboardButton(
+                text="Back",
+                callback_data="customer_back"),
+      
+     InlineKeyboardButton(
+                text="Exit",
+                callback_data="exit"
+            )
+    ]
+    ]
+    if 'search' in update.callback_query.data.strip().lower():
+        bot.send_message(
+            chat_id=chat_id,
+            text="Please enter the name of the business you're looking for"
+        )
+        return SEARCH
+    bot.send_message(
+        chat_id=chat_id,
+        text="Here's a list of categories available.\n"
+        "Choose one that matches your interest.",
+        reply_markup=InlineKeyboardMarkup(categories)
+    )
+    # print('before CHOOSE_PREF')
+    return CHOOSE_PREF
 
 
-<<<<<<< HEAD
+def search(update, context):
+    bot = context.bot
+    chat_id = update.message.chat.id
+    data = update.message.text.lower().strip()
+    # search for business using index
+    try:
+        biz = client.query(
+            q.get(
+                q.match(
+                    q.index("business_by_name"),
+                    data
+                )
+            )
+        )
+        # print('BIZ ', biz)
+        button = [
+            [
+                InlineKeyboardButton(
+                    text="View All Products",
+                    callback_data=biz["data"]["name"].strip().lower()
+                ),
+              InlineKeyboardButton(
+                    text="Select for updates",
+                    callback_data="pref"+','+biz["data"]["name"].strip().lower()
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Exit",
+                    callback_data="exit"
+                )
+            ]
+        ]
+        if "latest" in biz['data'].keys():
+            thumbnail = client.query(q.get(q.ref(q.collection("Product"), biz["data"]["latest"])))
+            # print(thumbnail)
+            bot.send_photo(
+                chat_id=chat_id,
+                photo=thumbnail["data"]["image"],
+                caption=f"Owner - {biz['data']['name'].capitalize()}",
+                reply_markup=InlineKeyboardMarkup(button)
+            )
+        else:
+            bot.send_message(
+                chat_id=chat_id,
+                text=f"Owner - {biz['data']['name'].capitalize()}",
+                reply_markup=InlineKeyboardMarkup(button)
+                )
+        return SHOW_STOCKS
+    except NotFound:
+        button = [
+            [
+                InlineKeyboardButton(
+                    text="View vendors to buy from",
+                    callback_data="customer"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Search for a vendor by name",
+                    callback_data="customer;search"
+                )
+            ],
+          [
+                InlineKeyboardButton(
+                    text="Exit",
+                    callback_data="exit"
+                )
+            ]
+
+        ]
+        bot.send_message(
+            chat_id=chat_id,
+            text="Oops didn't find any vendor with that name"
+            "check with your spelling to be sure its correct.",
+            reply_markup=InlineKeyboardMarkup(button)
+        )
+        return CLASS_STATE
+
+
+## BUSINESS
+def business_details(update, context):
+    bot = context.bot
+    chat_id = update.message.chat.id
+    data = update.message.text.split(',')
+    if len(data) < 3 or len(data) > 3:
+        bot.send_message(
+            chat_id=chat_id,
+            text="Invalid entry, please make sure to input the details "
+            "as requested in the instructions"
+        )
+        return SME_DETAILS
+    context.user_data["sme_dets"] = data
+    # categories = [
+    #         ['Clothing/Fashion', 'Hardware Accessories'],
+    #         ['Food/Kitchen Ware', 'ArtnDesign'],
+    #         ['Other']
+    # ]
+    categories = [  
+        [
+            InlineKeyboardButton(
+                text="Food",
+                callback_data="Food"
+            ),
+            InlineKeyboardButton(
+                text="Other",
+                callback_data="Other"
+            )
+        ]
+    ]
+    markup = InlineKeyboardMarkup(categories, one_time_keyboard=True)
+    bot.send_message(
+        chat_id=chat_id,
+        text="Pick a category for your Ads",
+        reply_markup=markup
+    )
+    return SME_CAT
+
+
 def business_details_update(update, context):
     bot = context.bot
     chat_id = update.callback_query.message.chat.id
@@ -409,14 +638,75 @@ def post_show_catalogue(update, context):
         return POST_VIEW_CATALOGUE
     # else if user chooses to remove product
     # find product and delete
+    # else if user chooses to remove product
+    # faunadb transaction to delete product and
+    # update biz latest product
     client.query(
-        q.delete(
-            q.ref(
-                q.collection('Product'),
-                data.split(';')[1]
+        q.do(
+            # delete product
+            q.delete(
+                q.ref(
+                    q.collection('Product'),
+                    data.split(';')[1]
+                )
+            ),
+            # if product deleted is the last latest
+            q.let(
+                {
+                    'biz_stack': q.if_(
+                        q.is_empty(
+                            q.match(
+                                q.index("business-stack_by_name"),
+                                context.user_data['sme_name']
+                            )
+                        ),
+                        q.create(
+                            q.collection('Business_Stack'),
+                            {
+                                'data': {
+                                    'name': context.user_data['sme_name'],
+                                    'stack': []
+                                }
+                            }
+                        ),
+                        q.get(
+                            q.match(
+                                q.index("business-stack_by_name"),
+                                context.user_data['sme_name']
+                            )
+                        )
+                    )
+                },
+                q.if_(
+                    q.equals(data.split(';')[1], context.user_data['sme_latest']),
+                    q.update(
+                        q.select(
+                            ['ref'],
+                            q.var('biz_stack')
+                        ),
+                        {
+                            "data": {
+                                "stack": q.reverse(
+                                    q.drop(1,
+                                        q.reverse(
+                                            q.select(
+                                                ['data', 'stack'],
+                                                q.var('biz_stack')
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                    ),
+                    q.var('biz_stack')
+                )
             )
         )
     )
+    # update the sme's latest product
+    update_sme_latest(context.user_data['sme_name'])
+
     bot.send_message(
         chat_id=608386138,
         text=f"{context.user_data['sme_name']} deteled a product",
@@ -529,15 +819,53 @@ def product_info(update: Update, context: CallbackContext):
                 }
             )
         )
-        # add new product as latest
+        # update latest products stack
         client.query(
-            q.update(
-                q.ref(q.collection("Business"), context.user_data["sme_id"]),
-                {"data": {
-                    "latest": newprod["ref"].id()
-                }}
+            q.let(
+                {
+                    "biz_stack": q.if_(
+                        q.is_empty(
+                            q.match(
+                                q.index("business-stack_by_name"),
+                                context.user_data["sme_name"]
+                            )
+                        ),
+                        q.create(
+                            q.collection('Business_Stack'),
+                            {
+                                'data': {
+                                    'name': context.user_data['sme_name'],
+                                    'stack': []
+                                }
+                            }
+                        ),
+                        q.get(
+                            q.match(
+                                q.index("business-stack_by_name"),
+                                context.user_data["sme_name"]
+                            )
+                        )
+                    )
+                },
+                q.update(
+                    q.select(['ref'], q.var('biz_stack')),
+                    {
+                        "data": {
+                            'stack': q.append(
+                                newprod['ref'].id(),
+                                q.select(
+                                    ['data', 'stack'],
+                                    q.var('biz_stack')
+                                )
+                            )
+                        }
+                    }
+                )
             )
         )
+        # update latest on business using stack
+        update_sme_latest(context.user_data['sme_name'])
+
         # context.user_data["product_data"] = newprod['data']
         button = [[InlineKeyboardButton(
             text='Add another product',
@@ -553,29 +881,29 @@ def product_info(update: Update, context: CallbackContext):
             reply_markup=InlineKeyboardMarkup(button)
         )
       
-        all_users = client.query(
-          q.paginate(
-            q.documents(
-              q.collection("User")),
-              size=100))
+        # all_users = client.query(
+        #   q.paginate(
+        #     q.documents(
+        #       q.collection("User")),
+        #       size=100))
 
-        for i in all_users['data']:
-            iid = i.id()
-            user = client.query(
-              q.get(
-                q.ref(
-                  q.collection("User"), iid)
-                    )
-                  )
-            user_chat_id = user['data']['chat_id']
-            try:
-                bot.send_message(
-                  chat_id=user_chat_id,
-                  text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
-                                 reply_markup=ReplyKeyboardRemove()
-            )
-            except Exception as e:
-              print('Tried Sending Message: ', e)
+        # for i in all_users['data']:
+        #     iid = i.id()
+        #     user = client.query(
+        #       q.get(
+        #         q.ref(
+        #           q.collection("User"), iid)
+        #             )
+        #           )
+        #     user_chat_id = user['data']['chat_id']
+        #     try:
+        #         bot.send_message(
+        #           chat_id=user_chat_id,
+        #           text=f"User {context.user_data['sme_name'].strip().capitalize()} added a new product - {data[0].strip().capitalize()}",
+        #                          reply_markup=ReplyKeyboardRemove()
+        #     )
+        #     except Exception as e:
+        #       print('Tried Sending Message: ', e)
         
         return ADD_PRODUCTS
   
@@ -631,15 +959,15 @@ def customer_pref(update, context):
             ]
             if "latest" in sme['data'].keys():
                 try:
-                  # print('inside latest')
-                  thumbnail = client.query(q.get(q.ref(q.collection("Product"), sme["data"]["latest"])))
-                  # print('Thumbnail - ', thumbnail)
-                  bot.send_photo(
-                      chat_id=chat_id,
-                      photo=thumbnail["data"]["image"],
-                      caption=f"Owner - {sme['data']['name'].capitalize()}",
-                      reply_markup=InlineKeyboardMarkup(button)
-                  )
+                # print('inside latest')
+                    thumbnail = client.query(q.get(q.ref(q.collection("Product"), sme["data"]["latest"])))
+                    # print('Thumbnail - ', thumbnail)
+                    bot.send_photo(
+                        chat_id=chat_id,
+                        photo=thumbnail["data"]["image"],
+                        caption=f"Owner - {sme['data']['name'].capitalize()}",
+                        reply_markup=InlineKeyboardMarkup(button)
+                    )
                 except:
                     pass
             # else:
@@ -650,7 +978,7 @@ def customer_pref(update, context):
                 # )
         return SHOW_STOCKS
     except NotFound:
-        print(e)
+        # print(e)
         button = [[
             InlineKeyboardButton(
                 text="Select another Category?",
@@ -799,13 +1127,13 @@ def post_view_products(update, context):
             caption=f"Name: {product['name']}\n\nDescription: {product['description']}\n\nPrice: {product['price']}"
             f"\n\n Customer's Name: {context.user_data['user-name']}",
             photo=product['image']
-        )  
+        )
         bot.send_contact(
             chat_id=product['sme_chat_id'],
             phone_number=context.user_data['user-data']['whatsapp'],
             first_name=context.user_data['user-data']['name']
         )
-      
+
         bot.send_message(
         chat_id=608386138,
         text=f"{context.user_data['user-data']['name'].upper()}\tsend order to \t{product['sme'].upper()}",
@@ -898,8 +1226,3 @@ def parse_product_info(data:str):
         else:
             return False
     return dic_
-=======
-keep_alive.keep_alive()
-if __name__ == '__main__':
-    main()
->>>>>>> 7b2b7e4bce60e8f770a8bbe54b877b83fecb7743
