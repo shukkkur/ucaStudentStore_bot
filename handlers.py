@@ -224,7 +224,10 @@ def after_start(update, context: CallbackContext) -> int:
             if sme:
                 context.user_data["sme_name"] = sme['data']['name'].lower().strip()
                 context.user_data['sme_cat'] = sme['data']['category'].lower().strip()
-                context.user_data['sme_latest'] = sme['data']['latest']
+                try:
+                    context.user_data['sme_latest'] = sme['data']['latest']
+                except KeyError:
+                    context.user_data['sme_latest'] = ""
                 context.user_data['sme_id'] = sme['ref'].id()
                 # context.user_data['sme_link'] = sme['data']['business_link']
                 button = [
@@ -615,30 +618,42 @@ def show_catalogue(update, context):
             reply_markup=InlineKeyboardMarkup(button)
         )
         return ADD_PRODUCTS
-    for product in products["data"]:
+      
+    leng = len(products['data']) - 1
+    for idx, product in enumerate(products["data"]):
         context.user_data["sme_name"] = product['data']['sme'].strip().lower()
-        button = [
-            [
-                InlineKeyboardButton(
-                    text="Edit Info",
-                    callback_data="Edit;" + product["ref"].id()
-                ),
-               InlineKeyboardButton(
-                    text="Delete",
-                    callback_data="Delete;" +product["ref"].id()
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="Back",
-                    callback_data="back"
-                ),
-               InlineKeyboardButton(
-                    text="Exit",
-                    callback_data="exit"
-                )
+        if idx == leng:
+            button = [
+                [
+                    InlineKeyboardButton(
+                        text="Edit Info",
+                        callback_data="Edit;" + product["ref"].id()
+                    ),
+                   InlineKeyboardButton(
+                        text="Delete",
+                        callback_data="Delete;" +product["ref"].id()
+                    )
+                ],
+                [
+                   InlineKeyboardButton(
+                        text="Exit",
+                        callback_data="exit"
+                    )
+                ]
             ]
-        ]
+        else:
+            button = [
+                [
+                    InlineKeyboardButton(
+                        text="Edit Info",
+                        callback_data="Edit;" + product["ref"].id()
+                    ),
+                   InlineKeyboardButton(
+                        text="Delete",
+                        callback_data="Delete;" +product["ref"].id()
+                    )
+                ]
+            ]
         bot.send_photo(
             chat_id=chat_id,
             photo=product["data"]["image"],
@@ -669,7 +684,7 @@ def post_show_catalogue(update, context):
         bot.send_message(
             chat_id=chat_id,
             text="Kindly add details for the update using the following format: "
-            "{product_attribute: value}\n name/description/price \ne.g.: {price:50} or "
+            "{product_attribute: value}\n name/description/price/category \ne.g.: {price:50} or "
             "{price:50, description: spicy ramen}"
         )
         context.user_data['product_id'] = data.split(';')[1]
@@ -996,9 +1011,30 @@ def customer_pref(update, context):
                 )
                 return CLASS_STATE
 
-            for product in products["data"]:
+            leng = len(products['data']) - 1
+            for idx, product in enumerate(products["data"]):
                 context.user_data["sme_id"] = product['data']['sme'].strip().lower()
-                button = [
+                if idx == leng:
+                    button = [
+                        [
+                            InlineKeyboardButton(
+                                text="Send Order",
+                                callback_data="order;" + product["ref"].id()
+                            ),
+                          InlineKeyboardButton(
+                                text="Vendor's Contacts",
+                                callback_data="contact;" + product["data"]["sme"].strip().lower()
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                text="Exit",
+                                callback_data="exit"
+                            )
+                        ]
+                    ]
+                else:
+                    button = [
                     [
                         InlineKeyboardButton(
                             text="Send Order",
@@ -1009,12 +1045,6 @@ def customer_pref(update, context):
                             callback_data="contact;" + product["data"]["sme"].strip().lower()
                         )
                     ],
-                    [
-                        InlineKeyboardButton(
-                            text="Exit",
-                            callback_data="exit"
-                        )
-                    ]
                 ]
                 bot.send_photo(
                     chat_id=chat_id,
@@ -1164,30 +1194,42 @@ def show_products(update, context):
             reply_markup=InlineKeyboardMarkup(button)
         )
         return CLASS_STATE
-    for product in products["data"]:
+    
+    leng = len(products['data']) - 1
+    for idx, product in enumerate(products["data"]):
         context.user_data["sme_id"] = product['data']['sme'].strip().lower()
-        button = [
-            [
-                InlineKeyboardButton(
-                    text="Send Order",
-                    callback_data="order;" + product["ref"].id()
-                ),
-              InlineKeyboardButton(
-                    text="Vendor's Contacts",
-                    callback_data="contact;" + product["data"]["sme"].strip().lower()
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="Back",
-                    callback_data="back"
-                ),
-                InlineKeyboardButton(
-                    text="Exit",
-                    callback_data="exit"
-                )
+        if idx == leng:
+            button = [
+                [
+                    InlineKeyboardButton(
+                        text="Send Order",
+                        callback_data="order;" + product["ref"].id()
+                    ),
+                  InlineKeyboardButton(
+                        text="Vendor's Contacts",
+                        callback_data="contact;" + product["data"]["sme"].strip().lower()
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="Exit",
+                        callback_data="exit"
+                    )
+                ]
             ]
-        ]
+        else:
+            button = [
+                [
+                    InlineKeyboardButton(
+                        text="Send Order",
+                        callback_data="order;" + product["ref"].id()
+                    ),
+                  InlineKeyboardButton(
+                        text="Vendor's Contacts",
+                        callback_data="contact;" + product["data"]["sme"].strip().lower()
+                    )
+                ]
+            ]
         bot.send_photo(
             chat_id=chat_id,
             photo=product["data"]["image"],
